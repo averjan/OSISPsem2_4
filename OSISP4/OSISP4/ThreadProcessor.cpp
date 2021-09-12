@@ -23,16 +23,6 @@ void ThreadProcessor::ExecuteQueue(int threadCount)
 	}
 	
 	WaitForMultipleObjects(threadCount, threads, TRUE, INFINITE);
-	/*
-	while (!removeTasks.Empty())
-	{
-		Task* task = removeTasks.Dequeue();
-		resultParams.push_back(task->params);
-		delete(task);
-	}
-
-	return resultParams;
-	*/
 }
 
 DWORD WINAPI ThreadProcessor::ProcessTask(void* vqueue)
