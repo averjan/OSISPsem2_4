@@ -19,6 +19,8 @@ void writeFile(vector<char> charResult);
 void SortChars(void* content);
 TaskQueue* initQueue(int threadCount, vector<char> sortChars);
 
+vector<vector<char>*> slices;
+
 int main()
 {
     vector<char> fileContent;
@@ -26,17 +28,11 @@ int main()
     TaskQueue *tqueue = initQueue(THREAD_COUNT, fileContent);
 
     ThreadProcessor tproc(tqueue);
-    vector<void*> procResults = tproc.ExecuteQueue(THREAD_COUNT);
-    
-    if (procResults.size() == 0)
+    tproc.ExecuteQueue(THREAD_COUNT);
+    vector<char> result((slices[0])->begin(), (slices[0])->end());
+    for (int i = 1; i < slices.size(); i++)
     {
-        return 0;
-    }
-
-    vector<char> result(((vector<char>*)procResults[0])->begin(), ((vector<char>*)procResults[0])->end());
-    for (int i = 1; i < procResults.size(); i++)
-    {
-        result = mergeArrays(result, *((vector<char>*)procResults[i]));
+        result = mergeArrays(result, *(slices[i]));
     }
 
     writeFile(result);
@@ -44,7 +40,7 @@ int main()
 
 void writeFile(vector<char> charResult)
 {
-    std::ofstream file("../output.txt");
+    std::ofstream file("../out.txt");
     for (char el : charResult) {
         file << el;
     }
@@ -77,6 +73,7 @@ TaskQueue* initQueue(int threadCount, vector<char> sortChars)
             sortChars.size() < (i + 1) * charsPerThread ?
             sortChars.end() : sortChars.begin() + (i + 1) * charsPerThread);
         Task *t = new Task(SortChars, (void*)slice);
+        slices.push_back(slice);
         tqueue->Enqueue(t);
     }
 

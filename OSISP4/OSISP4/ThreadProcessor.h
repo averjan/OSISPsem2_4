@@ -9,9 +9,9 @@ class ThreadProcessor
 {
 private:
 	TaskQueue *tqueue;
-
+	static DWORD WINAPI ProcessTask(void* vqueue);
 public:
 	ThreadProcessor(TaskQueue *queue);
-	std::vector<void*> ExecuteQueue(int threadCount);
+	void ExecuteQueue(int threadCount);
 };
 

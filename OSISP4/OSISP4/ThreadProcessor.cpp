@@ -7,31 +7,23 @@ ThreadProcessor::ThreadProcessor(TaskQueue *queue)
 	this->tqueue = queue;
 }
 
-std::vector<void*> ThreadProcessor::ExecuteQueue(int threadCount)
+void ThreadProcessor::ExecuteQueue(int threadCount)
 {
-	std::vector<void*> resultParams;
-	std::vector<std::thread> threads;
+	HANDLE* threads = (HANDLE*)malloc(sizeof(HANDLE) * threadCount);
 	TaskQueue removeTasks;
-	while (threadCount)
+	for (int i = 0; i < threadCount; i++)
 	{
-		Task* task = this->tqueue->Dequeue();
-		if (task != nullptr)
-		{
-			//std::thread t(task->func, task->params);
-			//threads.push_back(move(t));
-			task->func(task->params);
-			removeTasks.Enqueue(task);
-		}
-
-		threadCount--;
+		HANDLE t = CreateThread(NULL, 0, &ThreadProcessor::ProcessTask, (LPVOID)(this->tqueue), CREATE_SUSPENDED, NULL);
+		threads[i] = t;
 	}
 
+	for (int i = 0; i < threadCount; i++)
+	{
+		ResumeThread(threads[i]);
+	}
+	
+	WaitForMultipleObjects(threadCount, threads, TRUE, INFINITE);
 	/*
-	for (auto &t : threads)
-	{
-		t.join();
-	}
-	*/
 	while (!removeTasks.Empty())
 	{
 		Task* task = removeTasks.Dequeue();
@@ -40,4 +32,17 @@ std::vector<void*> ThreadProcessor::ExecuteQueue(int threadCount)
 	}
 
 	return resultParams;
+	*/
+}
+
+DWORD WINAPI ThreadProcessor::ProcessTask(void* vqueue)
+{
+	TaskQueue* queue = (TaskQueue*)vqueue;
+	if (!queue->Empty())
+	{
+		Task* task = queue->Dequeue();
+		task->func(task->params);
+	}
+
+	return 0;
 }
